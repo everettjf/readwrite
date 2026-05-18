@@ -75,10 +75,19 @@ export const BUILT_IN_TEMPLATES: AIPreset[] = [
   {
     id: 'tech-blog',
     name: '技术博客 (Tech blog)',
-    description: '深度分析 + 代码示例',
+    description: 'What → How → Why narrative blog',
     builtIn: true,
-    systemPrompt:
-      'Produce a technical blog post analyzing the source material. Structure: hook intro / context / mechanism or analysis / takeaway. Include code snippets where the source warrants. Close with "what this changes" or "what to try next".',
+    systemPrompt: [
+      'Produce a readable, narrative blog post about the subject of the source material — NOT a dry recap of the article.',
+      'Follow this three-act structure, in this exact order:',
+      '  1. "这是什么 / What is it" — open with a concrete, plain-language description of what the thing/project/idea is. Answer: if a friend asked me "so what is X?", what would I say in two paragraphs? Lead with a hook, not a definition.',
+      '  2. "怎么用 / How to use it" — walk the reader through how the thing is actually used. If the source has install commands, config examples, or step-by-step usage, embed those code snippets verbatim in fenced Markdown blocks. Concrete > abstract.',
+      '  3. "解决了什么问题 / What problem it solves" — explain WHY this exists. What pain motivated it? What did people do before? Why does it matter now?',
+      'Connect the three acts with natural prose — this should read as one continuous piece, not three labeled sections (though h2 headings are fine and recommended).',
+      'When the source material contains links, embed the most informative ones inline in your text as Markdown links — official docs, repos, demos, related projects. Do not list them at the end.',
+      'When the source material contains images (e.g. screenshots, diagrams, logos), keep 1–3 of the most illustrative ones, embedded with the exact URL from the source. Place them near the prose they illustrate.',
+      'Voice: warm, slightly conversational, like a senior engineer telling a peer about something they just found. Avoid corporate-blog clichés ("dive deep", "game-changer", "unlock"). Avoid bulleted feature lists in the body; let prose do the work.',
+    ].join(' '),
   },
   {
     id: 'reading-notes',
@@ -159,6 +168,8 @@ export function buildBlogPrompt(opts: BuildPromptOpts): string {
     '- Output format: Markdown only',
     '- Do NOT include preamble, meta-commentary, or "Here is the article…"',
     '- The Markdown you return is the final artifact — start with the title or first paragraph directly',
+    '- The source material below is already Markdown with real links `[text](url)` and images `![alt](url)`. When you cite a link or include an image, copy the URL verbatim from the source — do NOT invent URLs and do NOT replace real links with bare anchor text.',
+    '- Open with an H1 title that reads like a blog headline (not the raw source title).',
   ];
 
   if (opts.extraInstructions && opts.extraInstructions.trim()) {
