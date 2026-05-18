@@ -17,8 +17,19 @@ export const useEditorStore = create<EditorState>((set) => ({
   path: null,
   dirty: false,
   mode: 'wysiwyg',
+  // `markDirty` semantics:
+  //   true            → force dirty = true   (user typed / programmatic edit)
+  //   false           → force dirty = false  (fresh load / post-save normalize)
+  //   undefined       → infer from whether content actually changed
+  // Forcing dirty=false on load matters because the autosave subscriber
+  // would otherwise rewrite the just-opened file (bumping mtime) when the
+  // previous doc was dirty and the user chose to discard.
   setContent: (content, opts) =>
-    set((s) => ({ content, dirty: (opts?.markDirty ?? content !== s.content) ? true : s.dirty })),
+    set((s) => {
+      const nextDirty =
+        opts?.markDirty === undefined ? content !== s.content || s.dirty : opts.markDirty;
+      return { content, dirty: nextDirty };
+    }),
   setPath: (path) => set({ path }),
   setDirty: (dirty) => set({ dirty }),
   setMode: (mode) => set({ mode }),
