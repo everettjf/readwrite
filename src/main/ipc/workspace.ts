@@ -159,10 +159,12 @@ function migrateLegacy(): void {
   }
 }
 
-/** List all `<workspace>/<docFolder>/<docFolder>.md` doc files. */
+/** List all `<workspace>/<docFolder>/<docFolder>.md` doc files. Ordering
+ *  is decided by the renderer (user preference), so we return an
+ *  unsorted-by-design list. */
 async function listDocsIn(
   workspace: string,
-): Promise<Array<{ path: string; name: string; mtime: number }>> {
+): Promise<Array<{ path: string; name: string; mtime: number; ctime: number }>> {
   let dirEntries: Array<{
     name: string;
     isDirectory: () => boolean;
@@ -173,7 +175,7 @@ async function listDocsIn(
   } catch {
     return [];
   }
-  const docs: Array<{ path: string; name: string; mtime: number }> = [];
+  const docs: Array<{ path: string; name: string; mtime: number; ctime: number }> = [];
   for (const entry of dirEntries) {
     if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
     const folder = join(workspace, entry.name);
@@ -181,13 +183,16 @@ async function listDocsIn(
     try {
       const info = await stat(mdPath);
       if (info.isFile()) {
-        docs.push({ path: mdPath, name: entry.name, mtime: info.mtimeMs });
+        // birthtimeMs is 0 on filesystems that don't track creation time
+        // (some Linux setups). Fall back to mtime so sort-by-created
+        // still produces a stable, sensible ordering.
+        const ctime = info.birthtimeMs > 0 ? info.birthtimeMs : info.mtimeMs;
+        docs.push({ path: mdPath, name: entry.name, mtime: info.mtimeMs, ctime });
       }
     } catch {
       // markdown file not present; skip
     }
   }
-  docs.sort((a, b) => b.mtime - a.mtime);
   return docs;
 }
 

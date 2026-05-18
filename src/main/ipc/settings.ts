@@ -45,6 +45,8 @@ const DEFAULT_SETTINGS: AppSettings = {
 
   sidebarVisible: true,
 
+  docSortKey: 'mtime',
+
   quickLinks: DEFAULT_QUICK_LINKS,
 };
 

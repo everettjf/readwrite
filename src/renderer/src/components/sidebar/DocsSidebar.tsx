@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useWorkspaceStore } from '@/stores/workspace';
 import { useEditorStore } from '@/stores/editor';
+import { useSettingsStore } from '@/stores/settings';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -21,12 +23,14 @@ import {
   Search,
   X,
   ChevronDown,
+  ArrowUpDown,
+  Check,
 } from 'lucide-react';
 import { cn, relativeTime } from '@/lib/utils';
 import { createNewDocument, openMarkdownAtPath, renameDocFolder, docBasename } from '@/lib/doc-io';
 import { RenameDocDialog } from '@/components/dialogs/RenameDocDialog';
 import { WorkspaceSwitcher } from '@/components/layout/WorkspaceSwitcher';
-import type { DocSummary } from '@shared/types';
+import type { DocSummary, DocSortKey } from '@shared/types';
 
 interface DocsSidebarProps {
   onSwitchDoc: (doc: DocSummary) => Promise<void>;
@@ -38,6 +42,8 @@ export function DocsSidebar({ onSwitchDoc }: DocsSidebarProps): JSX.Element {
   const docs = useWorkspaceStore((s) => s.docs);
   const refreshDocs = useWorkspaceStore((s) => s.refreshDocs);
   const editorPath = useEditorStore((s) => s.path);
+  const sortKey = useSettingsStore((s) => s.docSortKey);
+  const updateSettings = useSettingsStore((s) => s.update);
 
   const [busy, setBusy] = useState(false);
   const [filter, setFilter] = useState('');
@@ -48,9 +54,14 @@ export function DocsSidebar({ onSwitchDoc }: DocsSidebarProps): JSX.Element {
 
   const filteredDocs = useMemo(() => {
     const q = filter.trim().toLowerCase();
-    if (!q) return docs;
-    return docs.filter((d) => d.name.toLowerCase().includes(q));
-  }, [filter, docs]);
+    const matched = q ? docs.filter((d) => d.name.toLowerCase().includes(q)) : docs.slice();
+    return sortDocs(matched, sortKey);
+  }, [filter, docs, sortKey]);
+
+  const setSortKey = (next: DocSortKey): void => {
+    if (next === sortKey) return;
+    void updateSettings({ docSortKey: next });
+  };
 
   const onNew = async (): Promise<void> => {
     const editor = useEditorStore.getState();
@@ -111,6 +122,34 @@ export function DocsSidebar({ onSwitchDoc }: DocsSidebarProps): JSX.Element {
         >
           <Plus className="h-3.5 w-3.5" />
         </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              title={`Sort: ${SORT_LABELS[sortKey]}`}
+            >
+              <ArrowUpDown className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
+              Sort by
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {(['mtime', 'ctime', 'name'] as const).map((k) => (
+              <DropdownMenuItem
+                key={k}
+                onSelect={() => setSortKey(k)}
+                className="flex items-center justify-between gap-4"
+              >
+                <span>{SORT_LABELS[k]}</span>
+                {sortKey === k && <Check className="h-3.5 w-3.5 text-muted-foreground" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button
           variant="ghost"
           size="icon"
@@ -160,6 +199,7 @@ export function DocsSidebar({ onSwitchDoc }: DocsSidebarProps): JSX.Element {
                   <DocRow
                     doc={doc}
                     active={isActive}
+                    sortKey={sortKey}
                     onOpen={onOpen}
                     onChanged={refreshDocs}
                     onStartRename={(d) => setRenameTarget(d)}
@@ -181,15 +221,40 @@ export function DocsSidebar({ onSwitchDoc }: DocsSidebarProps): JSX.Element {
   );
 }
 
+const SORT_LABELS: Record<DocSortKey, string> = {
+  mtime: 'Last modified',
+  ctime: 'Created',
+  name: 'Name (A–Z)',
+};
+
+function sortDocs(docs: DocSummary[], key: DocSortKey): DocSummary[] {
+  // Note: `docs` is already a fresh array — sort in place.
+  if (key === 'name') {
+    return docs.sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }),
+    );
+  }
+  if (key === 'ctime') return docs.sort((a, b) => b.ctime - a.ctime);
+  return docs.sort((a, b) => b.mtime - a.mtime);
+}
+
 interface DocRowProps {
   doc: DocSummary;
   active: boolean;
+  sortKey: DocSortKey;
   onOpen: (doc: DocSummary) => void;
   onChanged: () => Promise<void>;
   onStartRename: (doc: DocSummary) => void;
 }
 
-function DocRow({ doc, active, onOpen, onChanged, onStartRename }: DocRowProps): JSX.Element {
+function DocRow({
+  doc,
+  active,
+  sortKey,
+  onOpen,
+  onChanged,
+  onStartRename,
+}: DocRowProps): JSX.Element {
   const handleReveal = (): void => {
     window.api.workspace.revealInFinder(doc.path).catch(() => null);
   };
@@ -226,7 +291,11 @@ function DocRow({ doc, active, onOpen, onChanged, onStartRename }: DocRowProps):
       >
         <span className="truncate font-medium">{doc.name}</span>
         <span className="truncate text-[10px] text-muted-foreground">
-          {relativeTime(doc.mtime)}
+          {sortKey === 'name'
+            ? relativeTime(doc.mtime)
+            : sortKey === 'ctime'
+              ? `Created ${relativeTime(doc.ctime)}`
+              : relativeTime(doc.mtime)}
         </span>
       </button>
       <DropdownMenu>

@@ -137,6 +137,9 @@ export interface AppSettings {
   /** Whether the workspace docs sidebar is visible. */
   sidebarVisible: boolean;
 
+  /** How to order the docs sidebar list. */
+  docSortKey: DocSortKey;
+
   /** User-curated shortcuts shown on the reader empty state. */
   quickLinks: QuickLink[];
 }
@@ -170,7 +173,12 @@ export interface DocSummary {
   name: string;
   /** mtime in milliseconds (sortable). */
   mtime: number;
+  /** birthtime in milliseconds. Falls back to mtime on filesystems without birthtime. */
+  ctime: number;
 }
+
+/** How the docs sidebar list is ordered. */
+export type DocSortKey = 'mtime' | 'ctime' | 'name';
 
 export interface WechatPublishPayload {
   title: string;
