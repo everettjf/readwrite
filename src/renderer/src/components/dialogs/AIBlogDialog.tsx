@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,11 +9,11 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Loader2, Sparkles, AlertTriangle } from 'lucide-react';
+import { Loader2, Sparkles, AlertTriangle, Minimize2 } from 'lucide-react';
 import { useNativeViewMute } from '@/lib/native-view-mute';
 import { useSettingsStore } from '@/stores/settings';
-import { useWorkspaceStore } from '@/stores/workspace';
 import { useEditorStore } from '@/stores/editor';
+import { useAIBlogJobStore, type OutputTarget } from '@/stores/ai-blog-job';
 import { extractActiveReader, type ExtractedSource } from '@/lib/reader-extract';
 import {
   BUILT_IN_STYLES,
@@ -25,40 +25,34 @@ import {
   type Lang,
   type Length,
 } from '@/lib/ai-blog-presets';
-import { createNewDocument, openMarkdownAtPath } from '@/lib/doc-io';
 
-interface AIBlogDialogProps {
-  open: boolean;
-  onClose: () => void;
-}
+type SourcePhase =
+  | { kind: 'loading' }
+  | { kind: 'ready'; source: ExtractedSource }
+  | { kind: 'error'; message: string };
 
-type OutputTarget = 'new-doc' | 'append' | 'replace';
+export function AIBlogDialog(): JSX.Element {
+  const open = useAIBlogJobStore((s) => s.dialogOpen);
+  const status = useAIBlogJobStore((s) => s.status);
+  const progress = useAIBlogJobStore((s) => s.progress);
+  const storedSource = useAIBlogJobStore((s) => s.source);
+  const storedOutputTarget = useAIBlogJobStore((s) => s.outputTarget);
+  const storeError = useAIBlogJobStore((s) => s.error);
+  const closeDialog = useAIBlogJobStore((s) => s.closeDialog);
+  const startJob = useAIBlogJobStore((s) => s.start);
+  const cancelJob = useAIBlogJobStore((s) => s.cancel);
+  const clearError = useAIBlogJobStore((s) => s.clearError);
 
-interface Progress {
-  /** Full streaming output accumulated so far. */
-  total: string;
-  /** Char count — derived from total but kept handy for the header. */
-  chars: number;
-}
-
-type Phase =
-  | { kind: 'loading-source' }
-  | { kind: 'form'; source: ExtractedSource }
-  | { kind: 'generating'; source: ExtractedSource; jobId: string; progress: Progress }
-  | { kind: 'error'; message: string }
-  | { kind: 'source-error'; message: string };
-
-export function AIBlogDialog({ open, onClose }: AIBlogDialogProps): JSX.Element {
   useNativeViewMute(open);
+
   const aiCliProvider = useSettingsStore((s) => s.aiCliProvider);
   const aiCustomStyles = useSettingsStore((s) => s.aiCustomStyles);
   const aiCustomTemplates = useSettingsStore((s) => s.aiCustomTemplates);
-  const refreshDocs = useWorkspaceStore((s) => s.refreshDocs);
 
   const styles = mergeStyles(aiCustomStyles);
   const templates = mergeTemplates(aiCustomTemplates);
 
-  const [phase, setPhase] = useState<Phase>({ kind: 'loading-source' });
+  // Form fields are dialog-local — only the in-flight job lives in the store.
   const [styleId, setStyleId] = useState<string>(BUILT_IN_STYLES[0]!.id);
   const [templateId, setTemplateId] = useState<string>(BUILT_IN_TEMPLATES[0]!.id);
   const [language, setLanguage] = useState<Lang>('zh');
@@ -66,55 +60,56 @@ export function AIBlogDialog({ open, onClose }: AIBlogDialogProps): JSX.Element 
   const [outputTarget, setOutputTarget] = useState<OutputTarget>('new-doc');
   const [extra, setExtra] = useState('');
 
-  // Track the active job so we can cancel; ref so async closures see the
-  // latest value without re-subscribing.
-  const jobIdRef = useRef<string | null>(null);
+  // Source extraction is run only when opening for a fresh form (no running job).
+  const [sourcePhase, setSourcePhase] = useState<SourcePhase>({ kind: 'loading' });
 
-  // Fresh state every time the dialog opens.
+  const isGenerating = status === 'streaming';
+
   useEffect(() => {
     if (!open) return;
-    setPhase({ kind: 'loading-source' });
+    // Reopening to view a running job: reuse the stored source, skip extraction.
+    if (isGenerating && storedSource) {
+      setSourcePhase({ kind: 'ready', source: storedSource });
+      if (storedOutputTarget) setOutputTarget(storedOutputTarget);
+      return;
+    }
+
+    setSourcePhase({ kind: 'loading' });
     setExtra('');
-    jobIdRef.current = null;
 
     let cancelled = false;
     extractActiveReader()
       .then((source) => {
         if (cancelled) return;
-        setPhase({ kind: 'form', source });
+        setSourcePhase({ kind: 'ready', source });
       })
       .catch((err) => {
         if (cancelled) return;
-        setPhase({ kind: 'source-error', message: (err as Error).message });
+        setSourcePhase({ kind: 'error', message: (err as Error).message });
       });
     return () => {
       cancelled = true;
     };
-  }, [open]);
-
-  // Subscribe to live progress events from the CLI subprocess and
-  // funnel them into the current phase if it's the matching job.
-  useEffect(() => {
-    if (!open) return;
-    const off = window.api.aiCli.onProgress((evt) => {
-      setPhase((prev) =>
-        prev.kind === 'generating' && prev.jobId === evt.jobId
-          ? { ...prev, progress: { total: evt.total, chars: evt.chars } }
-          : prev,
-      );
-    });
-    return off;
+    // We intentionally only re-run on `open` transitions; `isGenerating`
+    // is read for the initial branch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const style: AIPreset = styles.find((s) => s.id === styleId) ?? styles[0]!;
   const template: AIPreset = templates.find((t) => t.id === templateId) ?? templates[0]!;
 
-  const startGeneration = async (): Promise<void> => {
-    if (phase.kind !== 'form') return;
+  const formDisabled = isGenerating;
+
+  const handleGenerate = async (): Promise<void> => {
+    if (sourcePhase.kind !== 'ready') return;
     if (aiCliProvider === 'none') {
-      setPhase({
-        kind: 'error',
-        message: 'External AI CLI is disabled. Pick a provider in Settings → AI CLI first.',
+      // Surface the same message we used to set inline; route through store
+      // so the indicator can show it if the user later closes the dialog.
+      clearError();
+      // No-op start: just bail with a user-visible note via stored error.
+      // We piggy-back by stuffing into store via a fake error set.
+      useAIBlogJobStore.setState({
+        error: 'External AI CLI is disabled. Pick a provider in Settings → AI CLI first.',
       });
       return;
     }
@@ -135,78 +130,18 @@ export function AIBlogDialog({ open, onClose }: AIBlogDialogProps): JSX.Element 
       language,
       length,
       extraInstructions: extra,
-      source: phase.source,
+      source: sourcePhase.source,
     });
 
     const jobId = `blog-${Date.now().toString(36)}`;
-    jobIdRef.current = jobId;
-    setPhase({
-      kind: 'generating',
-      source: phase.source,
-      jobId,
-      progress: { total: '', chars: 0 },
-    });
-
-    try {
-      const result = await window.api.aiCli.generate({ prompt, jobId });
-      // If the user cancelled while we were waiting, the IPC call would
-      // have rejected and we'd be in catch. Reaching here = success.
-      if (jobIdRef.current !== jobId) return; // superseded — shouldn't happen, defensive
-      await applyResult(result.text, outputTarget);
-      jobIdRef.current = null;
-      onClose();
-    } catch (err) {
-      if (jobIdRef.current !== jobId) return; // user closed or restarted
-      setPhase({ kind: 'error', message: (err as Error).message });
-    }
+    void startJob({ prompt, jobId, source: sourcePhase.source, outputTarget });
   };
 
-  const applyResult = async (text: string, target: OutputTarget): Promise<void> => {
-    const editor = useEditorStore.getState();
-    const trimmed = text.trim();
-    if (!trimmed) throw new Error('AI returned empty output.');
-
-    if (target === 'new-doc') {
-      const created = await createNewDocument({ initialContent: trimmed });
-      const opened = await openMarkdownAtPath(created.path);
-      editor.setPath(opened.path);
-      editor.setContent(opened.content, { markDirty: false });
-      await refreshDocs();
-      return;
-    }
-    if (target === 'append') {
-      const next = editor.content.trimEnd() + '\n\n' + trimmed + '\n';
-      editor.setContent(next, { markDirty: true });
-      return;
-    }
-    if (target === 'replace') {
-      editor.setContent(trimmed, { markDirty: true });
-      return;
-    }
-  };
-
-  const cancel = async (): Promise<void> => {
-    const jobId = jobIdRef.current;
-    if (!jobId) return;
-    jobIdRef.current = null;
-    try {
-      await window.api.aiCli.cancel(jobId);
-    } catch {
-      // ignore — main might have already cleaned up
-    }
-    if (phase.kind === 'generating') {
-      setPhase({ kind: 'form', source: phase.source });
-    }
-  };
-
+  // Pressing Escape / clicking the overlay / clicking × should minimize
+  // (not cancel) when a job is in-flight. Otherwise it closes as before.
   const handleOpenChange = (next: boolean): void => {
     if (next) return;
-    if (phase.kind === 'generating') {
-      // Confirm before throwing away an in-flight generation.
-      if (!confirm('Cancel the running generation?')) return;
-      void cancel();
-    }
-    onClose();
+    closeDialog();
   };
 
   return (
@@ -222,24 +157,24 @@ export function AIBlogDialog({ open, onClose }: AIBlogDialogProps): JSX.Element 
           </DialogDescription>
         </DialogHeader>
 
-        {phase.kind === 'loading-source' && (
+        {sourcePhase.kind === 'loading' && (
           <div className="flex items-center gap-3 py-6 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Extracting reader content…
           </div>
         )}
 
-        {phase.kind === 'source-error' && (
+        {sourcePhase.kind === 'error' && (
           <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             <div>
               <div className="font-medium">Couldn&rsquo;t read the active tab</div>
-              <div className="mt-0.5 opacity-80">{phase.message}</div>
+              <div className="mt-0.5 opacity-80">{sourcePhase.message}</div>
             </div>
           </div>
         )}
 
-        {(phase.kind === 'form' || phase.kind === 'error' || phase.kind === 'generating') && (
+        {sourcePhase.kind === 'ready' && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
@@ -248,7 +183,7 @@ export function AIBlogDialog({ open, onClose }: AIBlogDialogProps): JSX.Element 
                   id="blog-style"
                   value={styleId}
                   onChange={(e) => setStyleId(e.target.value)}
-                  disabled={phase.kind === 'generating'}
+                  disabled={formDisabled}
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
                   {styles.map((s) => (
@@ -267,7 +202,7 @@ export function AIBlogDialog({ open, onClose }: AIBlogDialogProps): JSX.Element 
                   id="blog-template"
                   value={templateId}
                   onChange={(e) => setTemplateId(e.target.value)}
-                  disabled={phase.kind === 'generating'}
+                  disabled={formDisabled}
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
                   {templates.map((t) => (
@@ -293,7 +228,7 @@ export function AIBlogDialog({ open, onClose }: AIBlogDialogProps): JSX.Element 
                       size="sm"
                       className="h-7 flex-1 text-xs"
                       onClick={() => setLanguage(l)}
-                      disabled={phase.kind === 'generating'}
+                      disabled={formDisabled}
                     >
                       {l === 'zh' ? '中文' : 'English'}
                     </Button>
@@ -312,7 +247,7 @@ export function AIBlogDialog({ open, onClose }: AIBlogDialogProps): JSX.Element 
                       size="sm"
                       className="h-7 flex-1 text-xs capitalize"
                       onClick={() => setLength(l)}
-                      disabled={phase.kind === 'generating'}
+                      disabled={formDisabled}
                     >
                       {l}
                     </Button>
@@ -338,7 +273,7 @@ export function AIBlogDialog({ open, onClose }: AIBlogDialogProps): JSX.Element 
                     size="sm"
                     className="h-7 text-xs"
                     onClick={() => setOutputTarget(id)}
-                    disabled={phase.kind === 'generating'}
+                    disabled={formDisabled}
                   >
                     {label}
                   </Button>
@@ -361,26 +296,24 @@ export function AIBlogDialog({ open, onClose }: AIBlogDialogProps): JSX.Element 
                 onChange={(e) => setExtra(e.target.value)}
                 rows={2}
                 placeholder="e.g. include a TL;DR up top; title should be a question"
-                disabled={phase.kind === 'generating'}
+                disabled={formDisabled}
                 className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />
             </div>
 
-            {(phase.kind === 'form' || phase.kind === 'generating') && (
-              <SourcePreview source={phase.source} />
-            )}
+            <SourcePreview source={sourcePhase.source} />
 
-            {phase.kind === 'generating' && (
+            {isGenerating && (
               <div className="space-y-2 rounded-md border border-border bg-muted/30 px-3 py-2">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   <span>
                     Streaming
-                    {phase.progress.chars > 0 ? (
+                    {progress.chars > 0 ? (
                       <>
                         {' · '}
                         <span className="font-mono text-foreground">
-                          {phase.progress.chars.toLocaleString()} chars
+                          {progress.chars.toLocaleString()} chars
                         </span>
                       </>
                     ) : (
@@ -388,9 +321,9 @@ export function AIBlogDialog({ open, onClose }: AIBlogDialogProps): JSX.Element 
                     )}
                   </span>
                 </div>
-                {phase.progress.total ? (
+                {progress.total ? (
                   <pre className="max-h-[40vh] overflow-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-foreground/85">
-                    {phase.progress.total}
+                    {progress.total}
                     <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-foreground/60 align-middle" />
                   </pre>
                 ) : (
@@ -398,33 +331,39 @@ export function AIBlogDialog({ open, onClose }: AIBlogDialogProps): JSX.Element 
                     Waiting for first token…
                   </div>
                 )}
+                <p className="text-[10px] text-muted-foreground">
+                  Tip: click <span className="font-medium">Minimize</span> to keep browsing the
+                  reader while generation continues in the background.
+                </p>
               </div>
             )}
 
-            {phase.kind === 'error' && (
+            {storeError && !isGenerating && (
               <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                <div className="break-words">{phase.message}</div>
+                <div className="break-words">{storeError}</div>
               </div>
             )}
           </div>
         )}
 
         <DialogFooter>
-          {phase.kind === 'generating' ? (
-            <Button variant="outline" onClick={cancel}>
-              Cancel generation
-            </Button>
+          {isGenerating ? (
+            <>
+              <Button variant="ghost" onClick={closeDialog} className="gap-1.5">
+                <Minimize2 className="h-3.5 w-3.5" /> Minimize
+              </Button>
+              <Button variant="outline" onClick={() => void cancelJob()}>
+                Cancel generation
+              </Button>
+            </>
           ) : (
             <>
-              <Button variant="ghost" onClick={onClose}>
+              <Button variant="ghost" onClick={closeDialog}>
                 Close
               </Button>
-              <Button
-                onClick={startGeneration}
-                disabled={phase.kind !== 'form' && phase.kind !== 'error'}
-              >
-                {phase.kind === 'error' ? 'Retry' : 'Generate'}
+              <Button onClick={() => void handleGenerate()} disabled={sourcePhase.kind !== 'ready'}>
+                {storeError ? 'Retry' : 'Generate'}
               </Button>
             </>
           )}

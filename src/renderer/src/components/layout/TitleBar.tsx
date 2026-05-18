@@ -33,6 +33,7 @@ import { useEditorStore } from '@/stores/editor';
 import { useWorkspaceStore } from '@/stores/workspace';
 import { useSettingsStore } from '@/stores/settings';
 import { useEditorCommandsStore } from '@/stores/editor-commands';
+import { useAIBlogJobStore } from '@/stores/ai-blog-job';
 import { useT } from '@/i18n';
 import { docBasename } from '@/lib/doc-io';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
@@ -117,7 +118,7 @@ export function TitleBar({ onNewDoc, onOpenDoc }: TitleBarProps): JSX.Element {
                 <DropdownMenuLabel>{t('titlebar.ai.label')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem onClick={() => requestAiCmd({ kind: 'blog' })}>
+                <DropdownMenuItem onClick={() => useAIBlogJobStore.getState().openDialog()}>
                   <Wand2 className="mr-2 h-4 w-4" />
                   <div className="flex flex-col">
                     <span>{t('titlebar.ai.generateFromReader')}</span>

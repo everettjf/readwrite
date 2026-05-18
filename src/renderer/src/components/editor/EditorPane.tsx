@@ -18,7 +18,6 @@ import { useActiveBridge } from '@/lib/active-bridge';
 import { buildWeChatHtml, copyHtmlToClipboard } from '@/lib/wechat-html';
 import { AIInterpretDialog, type InsertTarget } from '@/components/dialogs/AIInterpretDialog';
 import { AIDiffDialog } from '@/components/dialogs/AIDiffDialog';
-import { AIBlogDialog } from '@/components/dialogs/AIBlogDialog';
 import { PublishToWeChatDialog } from '@/components/dialogs/PublishToWeChatDialog';
 import { useEditorCommandsStore, type AiRequest } from '@/stores/editor-commands';
 import { marked } from 'marked';
@@ -65,7 +64,6 @@ function EditorToolbar(): JSX.Element {
     undefined,
   );
   const [publishOpen, setPublishOpen] = useState(false);
-  const [blogOpen, setBlogOpen] = useState(false);
 
   // The active AI diff request — null when no AI action is in flight or
   // pending review. The same state object carries through three phases:
@@ -326,9 +324,6 @@ function EditorToolbar(): JSX.Element {
       case 'interpret-reader-selection':
         onOpenInterpretFromReader(cmd.text, cmd.defaultPrompt);
         return;
-      case 'blog':
-        setBlogOpen(true);
-        return;
     }
   };
   useEffect(() => {
@@ -439,8 +434,6 @@ function EditorToolbar(): JSX.Element {
       )}
 
       <PublishToWeChatDialog open={publishOpen} onClose={() => setPublishOpen(false)} />
-
-      <AIBlogDialog open={blogOpen} onClose={() => setBlogOpen(false)} />
 
       {aiDiff && (
         <AIDiffDialog

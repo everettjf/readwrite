@@ -5,6 +5,8 @@ import { ReaderPane } from './components/reader/ReaderPane';
 import { EditorPane } from './components/editor/EditorPane';
 import { SnipOverlay } from './components/snip/SnipOverlay';
 import { DocsSidebar } from './components/sidebar/DocsSidebar';
+import { AIBlogJobIndicator } from './components/ai/AIBlogJobIndicator';
+import { AIBlogDialog } from './components/dialogs/AIBlogDialog';
 import { WorkspacePicker } from './WorkspacePicker';
 import { useSettingsStore } from './stores/settings';
 import { useEditorStore } from './stores/editor';
@@ -377,6 +379,8 @@ export function App(): JSX.Element {
           {snipToast}
         </div>
       )}
+      <AIBlogDialog />
+      <AIBlogJobIndicator />
     </div>
   );
 }

@@ -14,7 +14,6 @@ export type AiRequest =
   | { kind: 'summarize' }
   | { kind: 'explain' }
   | { kind: 'interpret' }
-  | { kind: 'blog' }
   | { kind: 'interpret-reader-selection'; text: string; defaultPrompt?: string };
 
 interface EditorCommandsState {
