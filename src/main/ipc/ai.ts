@@ -30,10 +30,14 @@ function makeModel(settings: AppSettings): LanguageModel {
     case 'deepseek':
       return createDeepSeek({ apiKey })(model);
     case 'openai-compatible':
+      // Use `.chat()` (not the default callable) so we hit `/chat/completions`.
+      // The default callable targets `/responses`, which most OpenAI-compatible
+      // providers (DeepSeek, Moonshot, Ollama, custom hosts) don't implement —
+      // they answer with no body, causing an "empty response" downstream.
       return createOpenAI({
         apiKey,
         baseURL: settings.aiEndpoint.replace(/\/+$/, ''),
-      })(model);
+      }).chat(model);
   }
 }
 
@@ -82,11 +86,28 @@ export function registerAiIpc(_ctx: IpcContext): void {
         });
 
         let buffer = '';
-        for await (const delta of result.textStream) {
-          buffer += delta;
-          if (!e.sender.isDestroyed()) {
-            e.sender.send(IPC.AI_COMPLETE_PROGRESS, { jobId, delta, total: buffer });
+        let streamError: unknown = undefined;
+        // fullStream surfaces non-fatal errors as 'error' parts (e.g. an
+        // upstream 4xx that returned a JSON error body but didn't break the
+        // SSE connection). textStream silently swallows those.
+        for await (const part of result.fullStream) {
+          if (part.type === 'text-delta') {
+            buffer += part.text;
+            if (!e.sender.isDestroyed()) {
+              e.sender.send(IPC.AI_COMPLETE_PROGRESS, {
+                jobId,
+                delta: part.text,
+                total: buffer,
+              });
+            }
+          } else if (part.type === 'error') {
+            streamError = part.error;
           }
+        }
+
+        if (streamError) {
+          const msg = streamError instanceof Error ? streamError.message : String(streamError);
+          throw new Error(msg);
         }
 
         const text = buffer.trim();
