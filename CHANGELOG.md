@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.1.10] — 2026-05-18
+
+### Added
+
+- **layout**: center editor content across editor + sidebar (ee73426)
+- **ai**: rewrite tech blog template as What → How → Why narrative (5e165f9)
+- **reader**: preserve links and images as Markdown when extracting article text (9666ec4)
+- **sidebar**: make docs list sort selectable (modified / created / name) (82cad59)
+- **ai**: allow minimizing Generate from reader while generation continues (0039a74)
+
+### Fixed
+
+- **editor**: stop autosave from rewriting freshly-opened docs (458fc33)
+- **ai**: route openai-compatible to /chat/completions and surface stream errors (6982d36)
+
 ## [0.1.9] — 2026-05-16
 
 ### Added

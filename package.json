@@ -1,6 +1,6 @@
 {
   "name": "readwrite",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Read anything. Write anywhere. A cross-platform desktop app that puts a reader and a Markdown editor side by side.",
   "private": true,
   "author": {
