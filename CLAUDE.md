@@ -23,7 +23,8 @@ pnpm dist:mac | dist:win | dist:linux      # explicit platform (cross-builds for
 pnpm run rebuild:native  # NOTE: `pnpm rebuild` is a different built-in; the `run` matters when better-sqlite3 / NODE_MODULE_VERSION drifts
 
 ./deploy.sh              # typecheck + lint + test + dist for host
-./deploy.sh release [patch|minor|major|x.y.z]   # bumps package.json, regenerates CHANGELOG.md from Conventional Commits, tags, pushes (set SKIP_CHECKS=1 to skip the gate, YES=1 to skip the confirmation prompt)
+./deploy.sh release [patch|minor|major|x.y.z]   # bumps package.json, regenerates CHANGELOG.md from Conventional Commits, tags, pushes (set SKIP_CHECKS=1 to skip the gate, YES=1 to skip the confirmation prompt, UPLOAD_MAC=1 to also build+upload the mac .dmg locally instead of waiting for CI)
+./deploy.sh upload-mac [version]   # build the mac .dmg locally and upload it to the GitHub Release (defaults to package.json version) — for filling in mac artifacts by hand after a failed CI run; creates the release if missing
 ```
 
 Pre-commit runs `lint-staged` (eslint --fix + prettier) via Husky; commitlint enforces Conventional Commits on commit messages. Do not bypass either with `--no-verify`.
