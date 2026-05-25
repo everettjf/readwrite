@@ -18,9 +18,16 @@
 #                                        from `git log <last-tag>..HEAD`, commits, tags, pushes, triggers
 #                                        the three-OS GitHub Actions matrix.
 #
+#   ./deploy.sh upload-mac               Build the mac .dmg locally and upload it to the existing GitHub
+#   ./deploy.sh upload-mac 0.1.11        Release for v<version> (defaults to package.json). Use this when CI
+#                                        failed and you want to fill in the mac artifacts by hand. Creates the
+#                                        release if it doesn't exist yet.
+#
 # Env:
 #   SKIP_CHECKS=1                        Skip typecheck/lint/test before packaging
 #   YES=1                                Skip the "Continue? [y/N]" prompt on release
+#   UPLOAD_MAC=1                         On `release`, also build the mac .dmg locally and upload it to the
+#                                        GitHub Release (don't wait for CI's macos-latest job)
 
 set -euo pipefail
 
@@ -108,6 +115,69 @@ build_all() {
       exit 1
       ;;
   esac
+}
+
+extract_changelog_notes() {
+  # Print the CHANGELOG.md body for <version> — everything between its
+  # `## [<version>] — <date>` heading and the next `## [` heading.
+  local version="$1"
+  awk -v ver="$version" '
+    $0 ~ ("^## \\[" ver "\\]") { grab = 1; next }
+    grab && /^## \[/ { exit }
+    grab { print }
+  ' CHANGELOG.md
+}
+
+upload_mac_release() {
+  # upload_mac_release <version>
+  # Build the mac .dmg locally and upload it (plus blockmaps + the
+  # latest-mac.yml auto-update manifest) to the GitHub Release for v<version>,
+  # creating the release first if CI hasn't produced it yet.
+  local version="$1"
+  local tag="v${version}"
+
+  if ! command -v gh >/dev/null 2>&1; then
+    echo "ERROR: 'gh' CLI not found — install it to upload (brew install gh)." >&2
+    exit 1
+  fi
+
+  build_mac
+
+  local out_dir="release/${version}"
+  # electron-builder emits both DMGs, their blockmaps, and latest-mac.yml here.
+  local assets=()
+  local f
+  for f in \
+    "${out_dir}/ReadWrite-${version}-x64.dmg" \
+    "${out_dir}/ReadWrite-${version}-x64.dmg.blockmap" \
+    "${out_dir}/ReadWrite-${version}-arm64.dmg" \
+    "${out_dir}/ReadWrite-${version}-arm64.dmg.blockmap" \
+    "${out_dir}/latest-mac.yml"; do
+    [ -f "$f" ] && assets+=("$f")
+  done
+
+  if [ "${#assets[@]}" -eq 0 ]; then
+    echo "ERROR: No mac artifacts found in ${out_dir} after build." >&2
+    exit 1
+  fi
+
+  if gh release view "$tag" >/dev/null 2>&1; then
+    echo "==> Uploading mac artifacts to existing release $tag (--clobber)"
+    gh release upload "$tag" "${assets[@]}" --clobber
+  else
+    echo "==> Release $tag not found — creating it"
+    local notes_file
+    notes_file=$(mktemp)
+    extract_changelog_notes "$version" >"$notes_file" || true
+    if [ -s "$notes_file" ]; then
+      gh release create "$tag" "${assets[@]}" --title "ReadWrite $version" --notes-file "$notes_file"
+    else
+      gh release create "$tag" "${assets[@]}" --title "ReadWrite $version" --generate-notes
+    fi
+    rm -f "$notes_file"
+  fi
+
+  echo "✅ Uploaded mac artifacts to https://github.com/everettjf/ReadWrite/releases/tag/$tag"
 }
 
 bump_semver() {
@@ -218,6 +288,12 @@ release_tag() {
   git tag -a "$tag" -m "Release $version"
   git push origin "$tag" >/dev/null
 
+  if [ "${UPLOAD_MAC:-0}" = "1" ]; then
+    echo
+    echo "==> UPLOAD_MAC=1 — building and uploading the mac .dmg locally"
+    upload_mac_release "$version"
+  fi
+
   cat <<EOF
 
 ✅ Released $tag
@@ -269,6 +345,11 @@ main() {
       ;;
     release)
       release_tag "$@"
+      ;;
+    upload-mac)
+      ensure_pnpm_install
+      local v="${1:-$(node -p "require('./package.json').version")}"
+      upload_mac_release "$v"
       ;;
     *)
       echo "ERROR: Unknown command: $cmd" >&2
