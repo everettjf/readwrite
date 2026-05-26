@@ -67,6 +67,8 @@ Settings, session, per-workspace tab sessions, and recent reader items all live 
 ## Further reading
 
 - [`README.md`](README.md) — feature overview and quick start.
+- [`docs/usage.md`](docs/usage.md) — full end-user guide (install, reader, snip, editor, AI, publishing, settings, troubleshooting).
+- [`pages/`](pages/) — the static GitHub Pages landing site, published at <https://everettjf.github.io/ReadWrite/> by `.github/workflows/pages.yml` (Pages source = GitHub Actions) on pushes touching `pages/**`. Edit the HTML/CSS directly; no build step.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — branching, commit rules, dependency policy.
 - [`docs/develop.md`](docs/develop.md) — distributable builds, signing, the release flow in detail.
 - [`docs/testing.md`](docs/testing.md) — manual black-box test plan to run before tagging a macOS release.
