@@ -8,6 +8,11 @@
     <a href="https://github.com/everettjf/ReadWrite/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/everettjf/ReadWrite?include_prereleases&color=blue"></a>
     <a href="https://github.com/everettjf/ReadWrite/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/everettjf/ReadWrite/actions/workflows/ci.yml/badge.svg"></a>
   </p>
+  <p>
+    <strong><a href="https://everettjf.github.io/ReadWrite/">Website</a></strong> ·
+    <a href="https://github.com/everettjf/ReadWrite/releases/latest">Download</a> ·
+    <a href="docs/usage.md">User guide</a>
+  </p>
 </div>
 
 ReadWrite is a cross-platform desktop app that puts a **reader** and a **Markdown editor** side-by-side. Read a paper, GitHub repo, PDF, or EPUB on the left; take notes — with a real WYSIWYG editor, region screenshots that paste straight into the doc, AI actions, and one-click export to your blog or 微信公众号 — on the right.
@@ -220,6 +225,7 @@ PRs welcome. The basics:
 
 Reference docs:
 
+- [docs/usage.md](docs/usage.md) — full end-user guide: install, reader, snip, editor, AI, publishing, settings, troubleshooting.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — code style, commit conventions, PR norms.
 - [docs/develop.md](docs/develop.md) — building distributables, cutting releases, signing notes, troubleshooting.
 - [docs/testing.md](docs/testing.md) — black-box test plan for manual QA before a release.

@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ReadWrite — Read anything. Write anywhere.</title>
+    <meta
+      name="description"
+      content="ReadWrite is a cross-platform desktop app that puts a reader and a Markdown editor side by side. Read a paper, GitHub repo, PDF, or EPUB on the left; write notes — with region screenshots, AI actions, and one-click publish — on the right."
+    />
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <meta property="og:title" content="ReadWrite — Read anything. Write anywhere." />
+    <meta
+      property="og:description"
+      content="A side-by-side reader + Markdown editor. Long-form AI drafts run through your own local Claude Code / Codex / Gemini CLI — no extra API key."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="assets/icon.png" />
+    <meta name="theme-color" content="#b5471f" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- nav -->
+    <nav class="nav">
+      <div class="wrap">
+        <a class="brand" href="#top">
+          <img src="assets/icon.png" alt="ReadWrite icon" />
+          ReadWrite
+        </a>
+        <div class="nav-links">
+          <a href="#features" class="hide-sm">Features</a>
+          <a href="#ai" class="hide-sm">AI</a>
+          <a href="#start" class="hide-sm">Get started</a>
+          <a href="#faq" class="hide-sm">FAQ</a>
+          <a href="https://github.com/everettjf/ReadWrite" class="nav-cta">GitHub ↗</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- hero -->
+    <header class="hero" id="top">
+      <div class="wrap">
+        <span class="eyebrow">Open-source · macOS · Windows · Linux</span>
+        <h1>
+          <span class="read">Read</span> anything.<br />
+          <span class="write">Write</span> anywhere.
+        </h1>
+        <p class="lede">
+          A desktop app with a live <strong>reader</strong> on the left and a real WYSIWYG
+          <strong>Markdown editor</strong> on the right — and AI that turns what you're reading into
+          a first draft.
+        </p>
+        <p class="sub">
+          Read a paper, a GitHub repo, a PDF, or an EPUB. Snip a region straight into your notes.
+          Polish, translate, or generate long-form drafts — using the AI subscription you already
+          pay for.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://github.com/everettjf/ReadWrite/releases/latest"
+            >Download for free</a
+          >
+          <a class="btn btn-ghost" href="https://github.com/everettjf/ReadWrite"
+            >★ Star on GitHub</a
+          >
+        </div>
+        <p class="platforms">
+          MIT-licensed · Built with Electron, React, Milkdown &amp; CodeMirror
+        </p>
+
+        <!-- app mockup (inline SVG so the page stands alone without screenshots) -->
+        <div class="mockup" aria-label="ReadWrite window: reader on the left, editor on the right">
+          <svg viewBox="0 0 980 560" xmlns="http://www.w3.org/2000/svg" role="img">
+            <defs>
+              <linearGradient id="bgg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fbfaf6" />
+                <stop offset="1" stop-color="#f3efe6" />
+              </linearGradient>
+            </defs>
+            <rect width="980" height="560" fill="url(#bgg)" />
+            <!-- title bar -->
+            <rect x="0" y="0" width="980" height="40" fill="#efeae0" />
+            <circle cx="22" cy="20" r="6" fill="#e0685a" />
+            <circle cx="42" cy="20" r="6" fill="#e6b14e" />
+            <circle cx="62" cy="20" r="6" fill="#6cbf6c" />
+            <rect x="430" y="12" width="160" height="16" rx="8" fill="#ddd6c7" />
+            <text x="448" y="24" font-family="Georgia, serif" font-size="11" fill="#807a6f">
+              My Notes — Workspace
+            </text>
+            <!-- divider -->
+            <line x1="490" y1="40" x2="490" y2="560" stroke="#e0d9ca" stroke-width="1" />
+
+            <!-- READER (left) -->
+            <rect x="14" y="52" width="120" height="22" rx="6" fill="#2f6f6b" opacity="0.14" />
+            <text
+              x="26"
+              y="67"
+              font-family="-apple-system, sans-serif"
+              font-size="11"
+              fill="#2f6f6b"
+            >
+              ◆ arxiv.org/abs…
+            </text>
+            <rect x="142" y="52" width="64" height="22" rx="6" fill="#e8e2d5" />
+            <text
+              x="154"
+              y="67"
+              font-family="-apple-system, sans-serif"
+              font-size="11"
+              fill="#807a6f"
+            >
+              repo
+            </text>
+            <rect x="430" y="54" width="46" height="18" rx="5" fill="#ffffff" stroke="#d4cbb9" />
+            <text
+              x="441"
+              y="67"
+              font-family="-apple-system, sans-serif"
+              font-size="11"
+              fill="#b5471f"
+            >
+              ✂ snip
+            </text>
+            <text x="26" y="108" font-family="Georgia, serif" font-size="17" fill="#1c1a17">
+              Attention Is All You Need
+            </text>
+            <rect x="26" y="124" width="430" height="7" rx="3" fill="#ddd6c7" />
+            <rect x="26" y="140" width="430" height="7" rx="3" fill="#ddd6c7" />
+            <rect x="26" y="156" width="360" height="7" rx="3" fill="#ddd6c7" />
+            <rect x="26" y="182" width="430" height="120" rx="8" fill="#eae4d6" />
+            <text
+              x="200"
+              y="248"
+              font-family="-apple-system, sans-serif"
+              font-size="12"
+              fill="#a59d8c"
+            >
+              figure / diagram
+            </text>
+            <rect x="26" y="318" width="430" height="7" rx="3" fill="#ddd6c7" />
+            <rect x="26" y="334" width="410" height="7" rx="3" fill="#ddd6c7" />
+            <rect x="26" y="350" width="430" height="7" rx="3" fill="#ddd6c7" />
+            <rect x="26" y="366" width="300" height="7" rx="3" fill="#ddd6c7" />
+
+            <!-- EDITOR (right) -->
+            <text x="512" y="68" font-family="Georgia, serif" font-size="20" fill="#1c1a17">
+              # Notes on Transformers
+            </text>
+            <rect x="512" y="86" width="300" height="7" rx="3" fill="#cfc7b5" />
+            <rect x="512" y="104" width="430" height="7" rx="3" fill="#cfc7b5" />
+            <rect x="512" y="120" width="400" height="7" rx="3" fill="#cfc7b5" />
+            <!-- pasted snip -->
+            <rect x="512" y="142" width="300" height="84" rx="8" fill="#eae4d6" stroke="#d4cbb9" />
+            <text
+              x="540"
+              y="188"
+              font-family="-apple-system, sans-serif"
+              font-size="11"
+              fill="#a59d8c"
+            >
+              ![](images/snip-01.png)
+            </text>
+            <rect x="512" y="240" width="430" height="7" rx="3" fill="#cfc7b5" />
+            <rect x="512" y="256" width="360" height="7" rx="3" fill="#cfc7b5" />
+            <!-- AI generation panel -->
+            <rect
+              x="512"
+              y="288"
+              width="430"
+              height="120"
+              rx="10"
+              fill="#ffffff"
+              stroke="#e0a382"
+            />
+            <rect x="512" y="288" width="430" height="28" rx="10" fill="#b5471f" opacity="0.1" />
+            <text
+              x="528"
+              y="307"
+              font-family="-apple-system, sans-serif"
+              font-size="12"
+              fill="#b5471f"
+            >
+              ✶ Generate from reader · Claude Code
+            </text>
+            <rect x="528" y="330" width="398" height="6" rx="3" fill="#e6ddcf" />
+            <rect x="528" y="344" width="398" height="6" rx="3" fill="#e6ddcf" />
+            <rect x="528" y="358" width="260" height="6" rx="3" fill="#e6ddcf" />
+            <rect x="528" y="380" width="120" height="16" rx="4" fill="#b5471f" opacity="0.85" />
+            <text
+              x="540"
+              y="392"
+              font-family="-apple-system, sans-serif"
+              font-size="10"
+              fill="#fff"
+            >
+              streaming… 1,284
+            </text>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- why -->
+    <section class="alt">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="kicker">Why it exists</span>
+          <h2>One window for read-and-write work</h2>
+          <p>
+            Reading a paper to write about it, turning a tutorial into notes, browsing a repo to
+            draft a post — that work fits neither a browser tab nor a notes app.
+          </p>
+        </div>
+        <div class="split">
+          <div class="col problem">
+            <h3>Browser-only</h3>
+            <p>
+              You screenshot, alt-tab, paste, repeat. Nothing remembers what you were reading, and
+              your draft lives somewhere else entirely.
+            </p>
+          </div>
+          <div class="col problem">
+            <h3>Notes-only</h3>
+            <p>
+              Obsidian, Notion, Bear… the source material is in another window. Pasting a URL is a
+              sad substitute for having it <em>next to</em> what you're writing.
+            </p>
+          </div>
+        </div>
+        <div class="split mt">
+          <div class="col solution" style="grid-column: 1 / -1">
+            <h3>ReadWrite</h3>
+            <p>
+              A live reader on the left, an editor on the right, a snip tool that drops region
+              screenshots straight into your doc as a relative-path image — and AI that can read
+              what's in the reader and draft something for you on the right.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- features -->
+    <section id="features">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="kicker">What's inside</span>
+          <h2>Everything in two panes</h2>
+        </div>
+        <div class="features">
+          <div class="feature">
+            <div class="ico">📖</div>
+            <h3>A reader that handles real sites</h3>
+            <p>Multi-tab, four kinds of source, all in one pane:</p>
+            <ul>
+              <li>
+                <strong>Web &amp; GitHub repos</strong> via a real Chromium view — cookies, logins,
+                and sites that block iframes just work.
+              </li>
+              <li><strong>PDF</strong> with continuous scroll &amp; zoom.</li>
+              <li><strong>EPUB</strong> with per-tab location memory.</li>
+              <li><strong>Local code folders</strong> with a live, hot-refreshing file tree.</li>
+            </ul>
+          </div>
+          <div class="feature">
+            <div class="ico">✂️</div>
+            <h3>Region snip → straight into the doc</h3>
+            <p>
+              Hit <code>⇧⌘S</code> (or <code>Ctrl+Shift+S</code>), drag a rectangle, and the cropped
+              PNG is saved to the doc's <code>images/</code> folder and inserted as a relative-path
+              Markdown reference. Native capture — instant, no external tool.
+            </p>
+          </div>
+          <div class="feature">
+            <div class="ico">✍️</div>
+            <h3>A real WYSIWYG editor</h3>
+            <p>
+              Milkdown 7 with GFM, history, and slash commands — one click to a CodeMirror source
+              view sharing the same buffer. Paste any image and it auto-saves locally. Autosave
+              keeps references relative, so moving a folder never breaks anything.
+            </p>
+          </div>
+          <div class="feature">
+            <div class="ico">🗂️</div>
+            <h3>Workspaces are just folders</h3>
+            <p>
+              Each document is its own subfolder with its <code>.md</code> and an
+              <code>images/</code> directory. Switch workspaces from the title bar — each remembers
+              its own open tabs, recent items, and last document. iCloud-friendly default path on
+              macOS.
+            </p>
+          </div>
+          <div class="feature">
+            <div class="ico">📤</div>
+            <h3>Publish where you actually post</h3>
+            <p>
+              One-click <strong>copy to WeChat 公众号</strong> with per-element inline styles and
+              base64-embedded images (three themes),
+              <strong>direct publish to a WeChat draft</strong>, or
+              <strong>copy as inlined HTML</strong> for email and Notion.
+            </p>
+          </div>
+          <div class="feature">
+            <div class="ico">🔒</div>
+            <h3>Local-first &amp; private</h3>
+            <p>
+              Your files stay plain Markdown on disk. API keys and the WeChat secret are encrypted
+              with the OS keychain (Electron <code>safeStorage</code>), never in plaintext. AI text
+              goes only to the endpoint <em>you</em> configure.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI callout -->
+    <section id="ai" class="alt">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="kicker">The non-obvious part</span>
+          <h2>AI, two ways</h2>
+          <p>
+            Short edits go over an API. Long-form drafts run through the AI CLI you already have
+            installed — using the seat you already pay for.
+          </p>
+        </div>
+        <div class="callout">
+          <div class="two">
+            <div>
+              <span class="tag api">Inline actions · API</span>
+              <h4>Polish · Translate · Summarize · Explain</h4>
+              <p>
+                Short, in-place edits over any OpenAI-compatible endpoint — OpenAI, Anthropic,
+                Google, DeepSeek, Moonshot, Azure, local Ollama. Every change opens a Cursor-style
+                diff: <strong>Accept / Reject / Regenerate</strong>. Nothing touches your text until
+                you say so.
+              </p>
+            </div>
+            <div>
+              <span class="tag cli">Generate from reader · local CLI</span>
+              <h4>Long-form drafts from what you're reading</h4>
+              <p>
+                Reads the active reader tab, then asks your local
+                <strong>Claude Code / Codex / Gemini / OpenCode</strong> CLI to draft a Markdown
+                artifact — no extra API key, no extra subscription. Pick a writing style × template,
+                watch it stream in, route to a new doc / append / replace.
+              </p>
+            </div>
+          </div>
+          <p class="mt" style="font-size: 14px; color: var(--ink-faint); margin-bottom: 0">
+            The CLI runs in a no-tools / sandboxed mode, so prompt-injected reader content can't
+            trick the model into reading your local files.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- get started -->
+    <section id="start">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="kicker">Get started</span>
+          <h2>From zero to first draft</h2>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="num">1</div>
+            <div class="body">
+              <h3>Install</h3>
+              <p>
+                Download a build for your platform below, or run from source with
+                <code>pnpm install &amp;&amp; pnpm dev</code> (Node ≥ 20, pnpm ≥ 9).
+              </p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="num">2</div>
+            <div class="body">
+              <h3>Pick a workspace folder</h3>
+              <p>
+                Any folder works. On macOS the default lives under iCloud Drive so your notes sync
+                across devices automatically.
+              </p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="num">3</div>
+            <div class="body">
+              <h3>Open something to read</h3>
+              <p>
+                Press the <code>+</code> in the reader tab bar and paste a URL, a GitHub
+                <code>owner/repo</code> shorthand, or open a local PDF / EPUB / code folder.
+              </p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="num">4</div>
+            <div class="body">
+              <h3>(Optional) Wire up your AI CLI</h3>
+              <p>
+                If you have one of these installed and authenticated, ReadWrite can use it for
+                long-form generation — no extra key needed:
+              </p>
+              <pre><span class="c"># check what you already have</span>
+which claude    <span class="c"># Anthropic Claude Code (recommended)</span>
+which codex     <span class="c"># OpenAI Codex</span>
+which gemini    <span class="c"># Google Gemini CLI</span>
+which opencode  <span class="c"># opencode.ai</span>
+
+<span class="c"># then in-app: Settings → AI → External AI CLI → Detect CLI</span></pre>
+            </div>
+          </div>
+          <div class="step">
+            <div class="num">5</div>
+            <div class="body">
+              <h3>Read, snip, and write</h3>
+              <p>
+                Snip regions with <code>⇧⌘S</code>, use inline AI actions on a selection, or hit
+                <strong>Generate from reader</strong> to draft from the whole tab. Then copy to
+                WeChat or export as HTML when you're done.
+              </p>
+            </div>
+          </div>
+        </div>
+        <p class="center mt">
+          <a
+            class="btn btn-ghost"
+            href="https://github.com/everettjf/ReadWrite/blob/main/docs/usage.md"
+            >Read the full user guide ↗</a
+          >
+        </p>
+      </div>
+    </section>
+
+    <!-- download -->
+    <section id="download" class="alt">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="kicker">Download</span>
+          <h2>Free, open source, every platform</h2>
+          <p>Grab the latest installer from GitHub Releases.</p>
+        </div>
+        <div class="dl-row">
+          <div class="dl-card">
+            <div class="os">macOS</div>
+            <div class="fmt">.dmg · Apple Silicon &amp; Intel</div>
+            <a class="btn btn-primary" href="https://github.com/everettjf/ReadWrite/releases/latest"
+              >Download</a
+            >
+          </div>
+          <div class="dl-card">
+            <div class="os">Windows</div>
+            <div class="fmt">.exe installer</div>
+            <a class="btn btn-ghost" href="https://github.com/everettjf/ReadWrite/releases/latest"
+              >Download</a
+            >
+          </div>
+          <div class="dl-card">
+            <div class="os">Linux</div>
+            <div class="fmt">.AppImage · .deb</div>
+            <a class="btn btn-ghost" href="https://github.com/everettjf/ReadWrite/releases/latest"
+              >Download</a
+            >
+          </div>
+        </div>
+        <p class="center mt" style="font-size: 14px; color: var(--ink-faint)">
+          Builds aren't code-signed yet — on first launch macOS Gatekeeper / Windows SmartScreen may
+          warn you. See the
+          <a href="https://github.com/everettjf/ReadWrite/blob/main/docs/usage.md#installation"
+            >install notes</a
+          >
+          to get past it.
+        </p>
+      </div>
+    </section>
+
+    <!-- faq -->
+    <section id="faq">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="kicker">FAQ</span>
+          <h2>Good questions</h2>
+        </div>
+        <div class="faq">
+          <details open>
+            <summary>Do I need to pay for AI to use ReadWrite?</summary>
+            <p>
+              No. The reader, editor, snip tool, workspaces, and publishing all work with zero AI
+              configured. AI is optional. When you do want it, inline actions need an
+              OpenAI-compatible API key, and long-form generation reuses a CLI subscription you
+              already have (Claude Code, Codex, Gemini, OpenCode) — no separate key.
+            </p>
+          </details>
+          <details>
+            <summary>Where are my notes stored?</summary>
+            <p>
+              In a plain folder you choose — each document is a subfolder with a Markdown file and
+              an <code>images/</code> directory. No proprietary database for your content; it's all
+              files you can sync, back up, or open in any other editor.
+            </p>
+          </details>
+          <details>
+            <summary>Is my data sent anywhere?</summary>
+            <p>
+              Only when you trigger an AI action, and only to the endpoint or CLI you configured.
+              API keys are encrypted in the OS keychain, never stored in plaintext. There's no
+              telemetry baked into the app.
+            </p>
+          </details>
+          <details>
+            <summary>Why does the web reader work where iframes fail?</summary>
+            <p>
+              It uses Electron's <code>WebContentsView</code> — a real Chromium tab layered above
+              the app — instead of an iframe or the deprecated <code>&lt;webview&gt;</code>. That's
+              why authenticated sites and sites that send <code>X-Frame-Options: DENY</code> render
+              correctly.
+            </p>
+          </details>
+          <details>
+            <summary>Which platform is most stable?</summary>
+            <p>
+              macOS is the most-used and most-tested path. Windows and Linux are built by CI on
+              every release but get less manual QA. This is early-stage open source — bug reports
+              and PRs are very welcome.
+            </p>
+          </details>
+          <details>
+            <summary>Can I contribute?</summary>
+            <p>
+              Yes. The project is MIT-licensed. See
+              <a href="https://github.com/everettjf/ReadWrite/blob/main/CONTRIBUTING.md"
+                >CONTRIBUTING.md</a
+              >
+              — branch off <code>main</code>, use Conventional Commits, and make sure
+              <code
+                >pnpm typecheck &amp;&amp; pnpm lint &amp;&amp; pnpm test &amp;&amp; pnpm
+                build</code
+              >
+              passes.
+            </p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap">
+        <div>
+          <strong style="font-family: var(--serif); color: var(--ink)">ReadWrite</strong> — Read
+          anything. Write anywhere. · MIT © everettjf
+        </div>
+        <div style="display: flex; gap: 18px; flex-wrap: wrap">
+          <a href="https://github.com/everettjf/ReadWrite">GitHub</a>
+          <a href="https://github.com/everettjf/ReadWrite/releases">Releases</a>
+          <a href="https://github.com/everettjf/ReadWrite/blob/main/docs/usage.md">User guide</a>
+          <a href="https://github.com/everettjf/ReadWrite/issues">Issues</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
