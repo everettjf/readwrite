@@ -21,6 +21,10 @@ The non-obvious bit: long-form AI generation runs through **your locally-install
 
 > **Status**: early-stage OSS. The macOS path is the most-used; Windows / Linux are built by CI but get less manual testing. PRs welcome.
 
+## ReadWrite 1.0
+
+The 1.0 workspace is organized around a tighter **Read → Capture → Write → Publish** loop. A new launch dashboard makes the active workspace, recent drafts, and the app's three core capabilities visible at a glance, while keeping documents as ordinary portable Markdown folders.
+
 <!--
 Screenshots — drop PNGs into docs/screenshots/ then uncomment.
 Suggested shots:

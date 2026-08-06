@@ -1,7 +1,7 @@
 import { useWorkspaceStore } from '@/stores/workspace';
 import { useEditorStore } from '@/stores/editor';
 import { Button } from '@/components/ui/button';
-import { FilePlus, FileText } from 'lucide-react';
+import { ArrowRight, BookOpen, FilePlus, FileText, PenLine, Sparkles } from 'lucide-react';
 import { relativeTime } from '@/lib/utils';
 import { createNewDocument, openMarkdownFromDialog, openMarkdownAtPath } from '@/lib/doc-io';
 import type { DocSummary } from '@shared/types';
@@ -46,24 +46,45 @@ export function WelcomePanel(): JSX.Element {
   const recentDocs = [...docs].sort((a, b) => b.mtime - a.mtime).slice(0, MAX_DOCS_SHOWN);
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-3xl space-y-8 px-8 py-12">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-semibold">ReadWrite</h1>
-          <p className="text-sm text-muted-foreground">
-            Workspace: <span className="font-medium text-foreground">{wsName}</span>
-          </p>
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-background via-background to-primary/[0.035]">
+      <div className="mx-auto max-w-4xl space-y-8 px-8 py-10">
+        <header className="relative overflow-hidden rounded-2xl border bg-card p-7 shadow-sm">
+          <div className="absolute -right-10 -top-14 h-40 w-40 rounded-full bg-primary/[0.06] blur-2xl" />
+          <div className="relative space-y-5">
+            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              {wsName}
+            </div>
+            <div className="max-w-xl space-y-2">
+              <h1 className="text-3xl font-semibold tracking-tight">Turn reading into writing.</h1>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Keep the source beside your draft, capture what matters, and shape it into something
+                worth sharing.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={onNewDoc}>
+                <FilePlus className="mr-2 h-4 w-4" /> Start a document
+              </Button>
+              <Button variant="outline" onClick={onOpenMarkdown}>
+                <FileText className="mr-2 h-4 w-4" /> Open Markdown…
+              </Button>
+            </div>
+          </div>
         </header>
 
-        <section className="space-y-2">
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={onNewDoc}>
-              <FilePlus className="mr-2 h-4 w-4" /> New document
-            </Button>
-            <Button variant="outline" onClick={onOpenMarkdown}>
-              <FileText className="mr-2 h-4 w-4" /> Open Markdown…
-            </Button>
-          </div>
+        <section className="grid gap-3 sm:grid-cols-3">
+          {[
+            { icon: BookOpen, title: 'Read', detail: 'Web, PDF, EPUB, or code' },
+            { icon: PenLine, title: 'Write', detail: 'WYSIWYG and source modes' },
+            { icon: Sparkles, title: 'Shape', detail: 'Snips, AI, and publishing' },
+          ].map(({ icon: Icon, title, detail }) => (
+            <div key={title} className="rounded-xl border bg-card/70 p-4">
+              <Icon className="mb-3 h-5 w-5 text-primary" />
+              <div className="text-sm font-medium">{title}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{detail}</div>
+            </div>
+          ))}
         </section>
 
         <section className="space-y-2">
@@ -75,19 +96,20 @@ export function WelcomePanel(): JSX.Element {
               No documents yet. Click <span className="font-mono">New document</span> above.
             </div>
           ) : (
-            <ul className="divide-y divide-border rounded-md border border-border">
+            <ul className="grid gap-2 sm:grid-cols-2">
               {recentDocs.map((doc) => (
                 <li key={doc.path}>
                   <button
                     type="button"
                     onClick={() => onOpenDoc(doc)}
-                    className="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent/40"
+                    className="group flex w-full items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md"
                   >
                     <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate text-sm">{doc.name}</span>
                     <span className="shrink-0 text-[10px] text-muted-foreground">
                       {relativeTime(doc.mtime)}
                     </span>
+                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                   </button>
                 </li>
               ))}
