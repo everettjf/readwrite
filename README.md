@@ -9,7 +9,8 @@
     <a href="https://github.com/everettjf/ReadWrite/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/everettjf/ReadWrite/actions/workflows/ci.yml/badge.svg"></a>
   </p>
   <p>
-    <strong><a href="https://everettjf.github.io/ReadWrite/">Website</a></strong> ·
+    <strong><a href="https://github.com/everettjf/readwrite">GitHub</a></strong> ·
+    <a href="https://everettjf.github.io/ReadWrite/">Website</a> ·
     <a href="https://github.com/everettjf/ReadWrite/releases/latest">Download</a> ·
     <a href="docs/usage.md">User guide</a>
   </p>
