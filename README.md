@@ -20,7 +20,7 @@ ReadWrite is a cross-platform desktop app that puts a **reader** and a **Markdow
 
 The non-obvious bit: long-form AI generation runs through **your locally-installed Claude Code / Codex / Gemini / OpenCode CLI** by default — no extra API key, no extra subscription. If you already pay for one of those, ReadWrite uses the seat you have.
 
-> **Status**: early-stage OSS. The macOS path is the most-used; Windows / Linux are built by CI but get less manual testing. PRs welcome.
+> **Project status: development paused.** ReadWrite is not currently under active development, and no new features or releases are planned for the time being. The source remains available for reference and existing users, but issues and pull requests may not receive a response.
 
 ## ReadWrite 1.0
 
